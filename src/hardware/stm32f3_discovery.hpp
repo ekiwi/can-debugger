@@ -72,6 +72,11 @@ public:
 	{
 		defaultSystemClock::enable();
 
+		Hardware::ModeLed0::setOutput(xpcc::Gpio::Low);
+		Hardware::ModeLed1::setOutput(xpcc::Gpio::Low);
+
+		Hardware::ModeSwitch::setInput();	// has external pulldown
+
 		GpioOutputA9::connect(DebugUart::Tx);
 		GpioInputA10::connect(DebugUart::Rx);
 		DebugUart::initialize<defaultSystemClock, DebugUartBaudrate>(10);

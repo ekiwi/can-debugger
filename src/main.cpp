@@ -19,9 +19,10 @@
  */
 // -----------------------------------------------------------------------------
 
-#include <xpcc/debug/logger.hpp>
 #include "hardware/stm32f3_discovery.hpp"
+#include "can_debugger.hpp"
 
+#include <xpcc/debug/logger.hpp>
 #include <xpcc_git_info.hpp>		// needs env.GitInfoHeader() in SConstruct
 #include <xpcc_build_info.hpp>		// needs env.BuildInfoHeader() in SConstruct
 
@@ -33,15 +34,24 @@ xpcc::log::Logger xpcc::log::info(loggerDevice);
 xpcc::log::Logger xpcc::log::warning(loggerDevice);
 xpcc::log::Logger xpcc::log::error(loggerDevice);
 
+#undef	XPCC_LOG_LEVEL
+#define	XPCC_LOG_LEVEL xpcc::log::INFO
+
+static CanDebugger<Hardware> canDebugger;
+
 MAIN_FUNCTION
 {
 	Hardware::initialize();
 
-	// print project information
 	XPCC_LOG_INFO << "[log-start] " XPCC_BUILD_PROJECT_NAME << xpcc::endl;
 	XPCC_LOG_INFO << "[build] " __DATE__            " @ " __TIME__           << xpcc::endl;
 	XPCC_LOG_INFO << "[build] " XPCC_BUILD_USER     " @ " XPCC_BUILD_MACHINE << xpcc::endl;
 	XPCC_LOG_INFO << "[build] " XPCC_BUILD_COMPILER " @ " XPCC_BUILD_OS      << xpcc::endl;
 	XPCC_LOG_INFO << "[git] " XPCC_GIT_SHA_ABBR " "  XPCC_GIT_SUBJECT          << xpcc::endl;
 	XPCC_LOG_INFO << "[git] " XPCC_GIT_AUTHOR   " <" XPCC_GIT_AUTHOR_EMAIL ">" << xpcc::endl;
+	XPCC_LOG_INFO << "[hardware] " << Hardware::Name << xpcc::endl; 
+
+	while(true) {
+		canDebugger.run();
+	}
 }
