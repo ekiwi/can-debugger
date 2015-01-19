@@ -27,3 +27,12 @@
 *.i*86
 *.x86_64
 *.hex
+
+# build
+build/
+
+# gedit backup
+*~
+
+# scons
+.sconsign.dblite
