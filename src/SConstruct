@@ -16,15 +16,20 @@ env.XpccLibrary()
 # create a file called 'defines.hpp' with all preprocessor defines if necessary
 env.Defines()
 
+# creates xpcc_git_info.hpp
+env.GitInfoHeader()
+
+# creates xpcc_build_info.hpp
+env.BuildInfoHeader()
+
 env.Alias('size', env.Size(program))
 env.Alias('symbols', env.Symbols(program))
 env.Alias('defines', env.ShowDefines())
 
 hexfile = env.Hex(program)
 
-env.Alias('program', env.Avrdude(program))
+env.Alias('program', env.OpenOcd(program))
 env.Alias('build', [hexfile, env.Listing(program)])
-env.Alias('fuse', env.AvrdudeFuses())
 env.Alias('all', ['build', 'size'])
 
 env.Default('all')
