@@ -23,17 +23,19 @@
 #define CAN_DEBUGGER_CAN_DEBUGGER
 
 #include <xpcc/processing/protothread.hpp>
+#include "hardware/hardware.hpp"
 
-template<class Hardware>
 class
 CanDebugger : public xpcc::pt::Protothread
 {
 public:
+	CanDebugger(Hardware& hardware) : hardware(hardware) {}
+
 	/// Needs to be called as often as possible.
 	bool
 	run();
+private:
+	Hardware& hardware;
 };
-
-#include "can_debugger_impl.hpp"
 
 #endif // CAN_DEBUGGER_CAN_DEBUGGER

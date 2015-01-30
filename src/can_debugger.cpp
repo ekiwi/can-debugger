@@ -18,18 +18,15 @@
  * this program; if not, see <http://www.gnu.org/licenses/>.
  */
 // -----------------------------------------------------------------------------
-
-#ifndef CAN_DEBUGGER_CAN_DEBUGGER
-	#error	"Don't include this file directly, use 'can_debugger.hpp' instead!"
-#endif
-
 #include <xpcc/debug/logger.hpp>
 #undef	XPCC_LOG_LEVEL
 #define	XPCC_LOG_LEVEL xpcc::log::DEBUG
 
-template<class Hardware>
+#include "can_debugger.hpp"
+
+
 bool
-CanDebugger<Hardware>::run()
+CanDebugger::run()
 {
 	PT_BEGIN();
 	XPCC_LOG_DEBUG << "[can-debugger] running" << xpcc::endl;
