@@ -21,39 +21,65 @@
 #define CAN_DEBUGGER_HARDWARE
 
 #include <xpcc/io/iodevice.hpp>
-#include <xpcc/architecture/interface/can.hpp>
+#include "abstract_can.hpp"
 
 class
-CanMessageReceiver(
+ChangeModeReceiver
 {
 public:
-	virtual void
-	receiveCanMessage()
-}
+	virtual bool
+	changeMode(const uint8_t mode) = 0;
+};
 
 /// hardware interface that can be handed to the higher level code
 class
 Hardware
 {
 public:
+	Hardware(AbstractCan& can) : can(can), changeModeReceiver(nullptr) {}
+
 	virtual void
 	initialize();
+
+	/// @defgroup version Version and Hardware Information
+	/// @{
 
 	/// returns a string describing the hardware used
 	virtual const char*
 	getDescription() = 0;
 
+	/// returns major version of hardware revision
+	virtual uint8_t
+	getMajorVersion() = 0;
+
+	/// returns minor version of hardware revision
+	virtual uint8_t
+	getMinorVersion() = 0;
+
+	/// @}
+
+
+	/// @defgroup communication Host and Debug Interfaces
+	/// @{
+
 	/// returns a reference to an IODevice that can be used for debug output
-	virtual IODevice&
+	virtual xpcc::IODevice&
 	getDebugIODevice() = 0;
 
 	/// returns a reference to an IODevice that can be used to communicate with the host pc
-	virtual IODevice&
+	virtual xpcc::IODevice&
 	getHostIODevice() = 0;
+
+	/// @}
+
+
+
+	/// @defgroup ui UI Interactions
+	/// @{
 
 	/// change LEDs/Display/... to indicate the mode
 	virtual void
-	displayMode(const uint8_t mode) = 0;
+	indicateMode(const uint8_t mode) = 0;
 
 	/// toggle LED to indicate an rx transaction
 	virtual void
@@ -63,29 +89,69 @@ public:
 	virtual void
 	indicateTx() = 0;
 
+	/// @}
+
+
+	/// @defgroup mode Mode Change Management
+	/// @{
+
+	/// try to change to a new mode
+	bool
+	changeMode(const uint8_t mode);
+
+	/// register class instance that will handle mode changes
+	void
+	registerChangeModeReceiver(ChangeModeReceiver* receiver);
+
+	/// @}
+
+	/// @defgroup can Can
+	/// @{
+
 	/// (re)initialize can
-	virtual void
-	initializeCan(xpcc::can::Bitrate bitrate) = 0;
+	inline void
+	initialize(const xpcc::Can::Mode mode, const uint32_t bitrate)
+	{ return can.initialize(mode, bitrate); }
 
-	/// change the can mode
-	virtual void
-	setCanMode(xpcc::can::Mode mode) = 0;
+	/// Returns true if a message was copied into the message buffer
+	inline bool
+	getCanMessage(xpcc::can::Message& message)
+	{ return can.getMessage(message); }
 
-	/// returns true if a new message was received
-	virtual bool
-	isCanMessageAvailable() = 0;
+	/**
+	 * Send a message over the CAN.
+	 * @return true if the message was send, false otherwise
+	 */
+	inline bool
+	sendCanMessage(const xpcc::can::Message& message)
+	{ return can.sendMessage(message); }
 
-	/// returns true if a new message was received
-	virtual bool
-	sendCanMessage(const can::Message& message) = 0;
+	/// Get Receive Error Counter.
+	inline uint8_t
+	getCanReceiveErrorCounter()
+	{ return can.getReceiveErrorCounter(); }
 
-// TODO: ass generic can filter class
+	/// Get Transmit Error Counter.
+	inline uint8_t
+	getCanTransmitErrorCounter()
+	{ return can.getTransmitErrorCounter(); }
+
+	inline xpcc::Can::BusState
+	getCanBusState()
+	{ return can.getBusState(); }
+
+// TODO: add generic can filter class
 //	/// add/change a can filter
 //	virtual void
-//	setCanFilter(xpcc::can::Filer filter) = 0;
+//	setCanFilter(xpcc::Can::Filer filter) = 0;
 
-}
+	/// @}
 
+private:
+	AbstractCan& can;
+	ChangeModeReceiver* changeModeReceiver;
+
+};
 
 
 #endif // CAN_DEBUGGER_HARDWARE
