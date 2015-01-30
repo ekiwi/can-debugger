@@ -70,8 +70,15 @@ UsbCan::run()
 	}
 
 	// 3.) check if there was a can error
-	// TODO
+	uint8_t new_rx = hardware.getCanReceiveErrorCounter();
+	uint8_t new_tx = hardware.getCanTransmitErrorCounter();
 
+	if(lastRxErrorCount != new_rx || lastTxErrorCount != new_tx) {
+		host << 'E' << xpcc::hex << new_rx << new_tx << xpcc::ascii << '\r';
+	}
+
+	lastRxErrorCount = new_rx;
+	lastTxErrorCount = new_tx;
 }
 
 enum class
