@@ -26,7 +26,12 @@
 void
 UsbCan::enable()
 {
-	//TODO: implement
+	isChannelOpen = false;
+	isBitrateSet  = false;
+	rxBuffer.reset();
+
+	lastRxErrorCount = hardware.getCanReceiveErrorCounter();
+	lastTxErrorCount = hardware.getCanTransmitErrorCounter();
 }
 
 void
@@ -41,7 +46,7 @@ UsbCan::run()
 	xpcc::can::Message msg;
 
 	// 1.) check for new can message that were received
-	if(hardware.getMessage(msg) && isChannelOpen) {
+	if(hardware.getCanMessage(msg) && isChannelOpen) {
 		char str[128];
 		xpcc::CanLawicelFormatter::convertToString(msg, str);
 		host << str;
@@ -49,9 +54,9 @@ UsbCan::run()
 	}
 
 	// 2.) check if any command from the host was received
-	char cc;
+	char cc = xpcc::IOStream::eof;
 	host.get(cc);
-	while(cc != IOStream::eof){
+	while(cc != xpcc::IOStream::eof){
 		if(cc == '\r') {
 			decodeCommand();
 			rxBuffer.reset();
@@ -87,7 +92,7 @@ Command : char
 	ReadSerialNumber = 'N',
 	ReadHardwareAndFirmwareVersion = 'V',
 	TurnOnOrOffTimeStamps = 'Z',
-}
+};
 
 enum class
 Error
@@ -101,6 +106,22 @@ Error
 	BitrateNotSet,
 	ChannelNotOpen,
 	InvalidOrEmptyCommand,
+};
+
+static inline uint32_t
+convertBitrate(char bitrate)
+{
+	switch(bitrate) {
+	case 0:  return xpcc::Can::Bitrate::kBps10;
+	case 1:  return xpcc::Can::Bitrate::kBps20;
+	case 2:  return xpcc::Can::Bitrate::kBps50;
+	case 3:  return xpcc::Can::Bitrate::kBps100;
+	case 4:  return xpcc::Can::Bitrate::kBps125;
+	case 5:  return xpcc::Can::Bitrate::kBps250;
+	case 6:  return xpcc::Can::Bitrate::kBps500;
+	case 7:  return xpcc::Can::Bitrate::MBps1;
+	default: return xpcc::Can::Bitrate::kBps125;
+	}
 }
 
 void
@@ -133,7 +154,7 @@ UsbCan::decodeCommand()
 			error = Error::InvalidCommandBody;
 		} else {
 			bitrate = (bitrate == 8)? 7 : bitrate;
-			// TODO: actually set bitrate
+			this->bitrate = convertBitrate(bitrate);
 			isBitrateSet = true;
 		}
 		break;
@@ -170,10 +191,11 @@ UsbCan::decodeCommand()
 			error = Error::BitrateNotSet;
 		} else {
 			if(command == Command::OpenChannel) {
-				hardware.setCanMode(xpcc::can::Mode::Normal);
+				this->mode = xpcc::Can::Mode::Normal;
 			} else if(command == Command::OpenListenOnly) {
-				hardware.setCanMode(xpcc::can::Mode::ListenOnly);
+				this->mode = xpcc::Can::Mode::ListenOnly;
 			}
+			hardware.initializeCan(this->mode, this->bitrate);
 			// TODO: initialize filters
 			isChannelOpen = true;
 		}
@@ -194,11 +216,13 @@ UsbCan::decodeCommand()
 		host << 'N' << xpcc::hex << 0 << 0 << xpcc::ascii;
 		break;
 	case Command::ReadHardwareAndFirmwareVersion:
+		{
 		const uint8_t hw_version =
-			(hardware.getMajorVersion() << 4) | hardware.getMinorVersion() & 0x0f;
+			(hardware.getMajorVersion() << 4) | (hardware.getMinorVersion() & 0x0f);
 		const uint8_t sw_version = 0;	// TODO
 		host << 'V' << xpcc::hex << hw_version << sw_version << xpcc::ascii;
 		break;
+		}
 	case Command::TurnOnOrOffTimeStamps:
 		// Switch on or off timestamps.
 		// On Lawicel this value is stored in EEPROM.

@@ -47,7 +47,12 @@ private:
 	bool isChannelOpen;
 	bool isBitrateSet;
 	bool useTimestamps;
-	
+
+	uint32_t bitrate;
+	xpcc::Can::Mode mode;
+
+	uint8_t lastRxErrorCount;
+	uint8_t lastTxErrorCount;
 
 	StringBuffer<40> rxBuffer;
 };

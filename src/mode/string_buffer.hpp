@@ -72,7 +72,7 @@ private:
 	// one additonal char for the string delimiter '\0'
 	char data[Size+1];
 	StringBufferSizeT count;
-}
+};
 
 #endif // CAN_DEBUGGER_STRING_BUFFER
 

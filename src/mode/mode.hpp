@@ -42,7 +42,7 @@ public:
 
 protected:
 	Hardware& hardware;
-	IOStream& host;
+	xpcc::IOStream host;
 };
 
 #endif // CAN_DEBUGGER_MODE
