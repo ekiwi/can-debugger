@@ -110,7 +110,7 @@ public:
 
 	/// (re)initialize can
 	inline void
-	initialize(const xpcc::Can::Mode mode, const uint32_t bitrate)
+	initializeCan(const xpcc::Can::Mode mode, const uint32_t bitrate)
 	{ return can.initialize(mode, bitrate); }
 
 	/// Returns true if a message was copied into the message buffer
