@@ -22,69 +22,82 @@
 #define CAN_DEBUGGER_HARDWARE_STM32F3_DISCOVER
 
 #include <xpcc/architecture.hpp>
-#include "../../xpcc/examples/stm32f3_discovery/stm32f3_discovery.hpp"
+#include "hardware.hpp"
 
 class
-Hardware
+Stm32F3Discovery : public Hardware
 {
+public:
+	Stm32F3Discovery();
+
+	virtual void
+	initialize() override;
+
+	virtual const char*
+	getDescription() override
+	{ return Description; }
+
+	virtual uint8_t
+	getMajorVersion() override
+	{ return MajorVersion; }
+
+	virtual uint8_t
+	getMinorVersion() override
+	{ return MinorVersion; }
+
+	virtual xpcc::IODevice&
+	getDebugIODevice() override
+	{ return debugDevice; }
+
+	virtual xpcc::IODevice&
+	getHostIODevice() override
+	{ return hostDevice; }
+
+	virtual void
+	indicateMode(const uint8_t mode) override
+	{ ModeLeds::write(mode % 4); }
+
+	virtual void
+	indicateRx() override
+	{ RxLed::toggle(); }
+
+	virtual void
+	indicateTx() override
+	{ TxLed::toggle(); }
+
+private:
+	static constexpr const char * Description = "STM32F3 Discovery";
+	static constexpr uint8_t MajorVersion = 3;
+	static constexpr uint8_t MinorVersion = 0;
+
 private:
 	// Tx: GpioOutputA2, Rx: GpioInputA3
-	typedef Usart2 HostUart;
-	// Tx: GpioOutputA9, Rx: GpioInputA10
-	typedef Usart1 DebugUart;
-
+	using HostUart = xpcc::stm32::Usart2;
 	static constexpr uint32_t HostUartBaudrate  = 921600;
+
+	// Tx: GpioOutputA9, Rx: GpioInputA10
+	using DebugUart = xpcc::stm32::Usart1;
 	static constexpr uint32_t DebugUartBaudrate = 115200;
 
-public:
-	typedef ::LedNorth     ModeLed0;
-	typedef ::LedNorthEast ModeLed1;
-	typedef ::Button ModeSwitch;
+	// 72 MHz System Clock
+	using defaultSystemClock = xpcc::stm32::SystemClock< xpcc::stm32::Pll< xpcc::stm32::ExternalClock<MHz8>, MHz72> >;
 
-	typedef ::xpcc::stm32::Can1 Can;
+	// UI: Leds
+	using ModeLeds = xpcc::SoftwareGpioPort<xpcc::stm32::GpioOutputE10, xpcc::stm32::GpioOutputE9>;
+	using RxLed    = xpcc::stm32::GpioOutputE15;	// LedWest
+	using TxLed    = xpcc::stm32::GpioOutputE14;	// LedSouthWest
 
-	static constexpr const char * Name = "STM32F3 Discovery";
+	// UI: Buttons
+	using ModeSwitch = xpcc::stm32::GpioInputA0;	// Button
 
-	struct
-	HostCommunication
-	{
-		static inline bool
-		read(uint8_t& data)
-		{ return HostUart::read(data); }
-		static inline bool
-		write(uint8_t data)
-		{ return HostUart::write(data); }
-	};
+	// Can
+	using Can = xpcc::stm32::Can1;
+	static constexpr uint32_t CanInterruptPriority = 10;
 
-	struct
-	DebugCommunication
-	{
-		static inline bool
-		read(uint8_t& data)
-		{ return DebugUart::read(data); }
-		static inline bool
-		write(uint8_t data)
-		{ return DebugUart::write(data); }
-	};
-
-	static inline void
-	initialize()
-	{
-		defaultSystemClock::enable();
-
-		Hardware::ModeLed0::setOutput(xpcc::Gpio::Low);
-		Hardware::ModeLed1::setOutput(xpcc::Gpio::Low);
-
-		Hardware::ModeSwitch::setInput();	// has external pulldown
-
-		GpioOutputA9::connect(DebugUart::Tx);
-		GpioInputA10::connect(DebugUart::Rx);
-		DebugUart::initialize<defaultSystemClock, DebugUartBaudrate>(10);
-
-		GpioOutputA2::connect(HostUart::Tx);
-		GpioInputA3::connect(HostUart::Rx);
-		HostUart::initialize<defaultSystemClock, HostUartBaudrate>(8);
-	}
+private:
+	xpcc::IODeviceWrapper<DebugUart, xpcc::IOBuffer::BlockIfFull> debugDevice;
+	xpcc::IODeviceWrapper<HostUart,  xpcc::IOBuffer::BlockIfFull> hostDevice;
+	CanWrapper<defaultSystemClock, Can, CanInterruptPriority> can;
 
 };	// class Hardware
 
