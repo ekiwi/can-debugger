@@ -22,7 +22,7 @@
 #define CAN_DEBUGGER_HARDWARE_STM32F3_DISCOVER
 
 #include <xpcc/architecture.hpp>
-#include "hardware.hpp"
+#include "../hardware.hpp"
 
 class
 Stm32F3Discovery : public Hardware
