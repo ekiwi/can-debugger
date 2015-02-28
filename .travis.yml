@@ -1,11 +1,17 @@
 language: cpp
 compiler: gcc
+
 before_install:
  - sudo apt-get update -qq
  - sudo apt-get install -y scons python-jinja2 python3
-before_script:
  - sudo apt-get install -y software-properties-common
  - sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
  - sudo apt-get update -q
  - sudo apt-get install -y gcc-arm-none-eabi
-script: ./check.py
+
+env:
+ - TEST_SUITE="unittest"
+ - TEST_SUITE="hardware=stm32f3_discovery"
+
+script:
+ - cd src && scons $TEST_SUITE
