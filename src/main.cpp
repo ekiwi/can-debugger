@@ -19,8 +19,6 @@
  */
 // -----------------------------------------------------------------------------
 
-#define HARDWARE_STM32F3_DISCOVERY
-
 #ifdef HARDWARE_STM32F3_DISCOVERY
 #include "hardware/stm32f3_discovery/stm32f3_discovery.hpp"
 Stm32F3Discovery hardware;

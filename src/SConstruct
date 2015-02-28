@@ -1,11 +1,33 @@
+import os
 
-# path to the xpcc root directory
-rootpath = '../xpcc'
+# settings
+default_hardware = "stm32f3_discovery"
+hardware_path = os.path.join('.', 'hardware')
 
-env = Environment(tools = ['xpcc'], toolpath = [rootpath + '/scons/site_tools'])
+available_hardware = {
+	# name                 source directory     define                        project config
+	'stm32f3_discovery': ['stm32f3_discovery', 'HARDWARE_STM32F3_DISCOVERY', 'stm32f3_discovery.cfg'],
+	'hosted':            ['hosted',            'HARDWARE_HOSTED',            'hosted.cfg'],
+}
+
+# choose hardware
+hardware_name = ARGUMENTS.get('hardware', default_hardware)
+if hardware_name not in available_hardware:
+	print("Error: Hardware '{}' is not available in src/hardware/!".format(hardware))
+	Exit(1)
+hardware = available_hardware[hardware_name]
+
+# calculate ignore paths based on hardware chosen
+ignore_paths = [os.path.join('.', 'hardware', p) for p in next(os.walk(hardware_path))[1] if p != hardware[0]]
+
+# create xpcc environment
+env = Environment(tools = ['xpcc'], toolpath = ['../xpcc/scons/site_tools'], configfile=hardware[2])
 
 # find all source files
-files = env.FindFiles('.', ignore=['hardware/hosted'])
+files = env.FindFiles('.', ignore=ignore_paths)
+
+# add hardware specific define
+env.Append(CPPDEFINES = {hardware[1]: '1'})
 
 # build the program
 program = env.Program(target = env['XPCC_CONFIG']['general']['name'], source = files.sources)
