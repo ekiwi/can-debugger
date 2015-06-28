@@ -20,11 +20,52 @@ hardware = available_hardware[hardware_name]
 # calculate ignore paths based on hardware chosen
 ignore_paths = [os.path.join('.', 'hardware', p) for p in next(os.walk(hardware_path))[1] if p != hardware[0]]
 
+configfile = os.path.join('cfg', hardware[2])
+
+############## unittest ######################################################
 # create xpcc environment
-env = Environment(tools = ['xpcc'], toolpath = ['../xpcc/scons/site_tools'], configfile=hardware[2])
+env = Environment(tools = ['xpcc'],
+	toolpath = ['../xpcc/scons/site_tools'],
+	configfile=os.path.join('cfg', 'unittest_hosted.cfg'))
+# build the xpcc library
+env.XpccLibrary()
+# create a file called 'defines.hpp' with all preprocessor defines if necessary
+env.Defines()
+# creates xpcc_git_info.hpp
+env.GitInfoHeader()
+# creates xpcc_build_info.hpp
+env.BuildInfoHeader()
+
+unittest_files = env.FindFiles('.', ignore=['hardware', 'main.cpp'])
+
+# declare a file which later runs all the tests
+template = ARGUMENTS.get('template', env['XPCC_CONFIG']['build']['template'])
+runner = env.UnittestRunner(target = env.Buildpath('runner.cpp'),
+							source = unittest_files.header,
+							template = template)
+
+sources = unittest_files.sources + [runner]
+unittest = env.Program(target=env['XPCC_CONFIG']['general']['name'], source=sources)
+
+env.Alias('build_unittest', unittest)
+env.Alias('unittest', env.Run(unittest))
+
+############## regular program ###############################################
+# create xpcc environment
+env = Environment(tools = ['xpcc'],
+	toolpath = ['../xpcc/scons/site_tools'],
+	configfile=configfile)
+# build the xpcc library
+env.XpccLibrary()
+# create a file called 'defines.hpp' with all preprocessor defines if necessary
+env.Defines()
+# creates xpcc_git_info.hpp
+env.GitInfoHeader()
+# creates xpcc_build_info.hpp
+env.BuildInfoHeader()
 
 # find all source files
-files = env.FindFiles('.', ignore=ignore_paths)
+files = env.FindFiles('.', ignore=ignore_paths + ['test'])
 
 # add hardware specific define
 env.Append(CPPDEFINES = {hardware[1]: '1'})
@@ -32,17 +73,6 @@ env.Append(CPPDEFINES = {hardware[1]: '1'})
 # build the program
 program = env.Program(target = env['XPCC_CONFIG']['general']['name'], source = files.sources)
 
-# build the xpcc library
-env.XpccLibrary()
-
-# create a file called 'defines.hpp' with all preprocessor defines if necessary
-env.Defines()
-
-# creates xpcc_git_info.hpp
-env.GitInfoHeader()
-
-# creates xpcc_build_info.hpp
-env.BuildInfoHeader()
 
 env.Alias('size', env.Size(program))
 env.Alias('symbols', env.Symbols(program))
