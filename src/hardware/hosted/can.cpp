@@ -21,7 +21,7 @@
 #include "can.hpp"
 
 void
-TestCan::initialize(const xpcc::Can::Mode mode, const uint32_t bitrate) override
+TestCan::initialize(const xpcc::Can::Mode mode, const uint32_t bitrate)
 {
 	this->initializeCalled = true;
 	this->busState = xpcc::Can::BusState::Connected;
@@ -30,7 +30,7 @@ TestCan::initialize(const xpcc::Can::Mode mode, const uint32_t bitrate) override
 }
 
 bool
-TestCan::getMessage(xpcc::can::Message& message) override
+TestCan::getMessage(xpcc::can::Message& message)
 {
 	if(this->debugInFifo.isEmpty()) {
 		return false;
@@ -42,7 +42,7 @@ TestCan::getMessage(xpcc::can::Message& message) override
 }
 
 bool
-TestCan::sendMessage(const xpcc::can::Message& message) override
+TestCan::sendMessage(const xpcc::can::Message& message)
 {
 	if(this->simulateFullSendBuffer || this->debugOutFifo.isFull()) {
 		return false;
@@ -53,13 +53,13 @@ TestCan::sendMessage(const xpcc::can::Message& message) override
 }
 
 uint8_t
-TestCan::getReceiveErrorCounter() override
+TestCan::getReceiveErrorCounter()
 { return this->rxErrorCount; }
 
 uint8_t
-TestCan::getTransmitErrorCounter() override
+TestCan::getTransmitErrorCounter()
 { return this->txErrorCount; }
 
 xpcc::Can::BusState
-TestCan::getBusState() override
+TestCan::getBusState()
 { return this->busState; }

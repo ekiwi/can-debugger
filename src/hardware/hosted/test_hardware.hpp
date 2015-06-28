@@ -27,7 +27,7 @@
  * This class emulates a hardware interface for running unittests.
  */
 class
-TestHardware
+TestHardware : public Hardware
 {
 public:
 	TestHardware();

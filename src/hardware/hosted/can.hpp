@@ -22,7 +22,7 @@
 #ifndef CAN_DEBUGGER_TEST_RIG_CAN
 #define CAN_DEBUGGER_TEST_RIG_CAN
 
-#include "../../abstract_can.hpp"
+#include "../../hardware/abstract_can.hpp"
 #include <xpcc/container/queue.hpp>
 
 class TestCan : public AbstractCan

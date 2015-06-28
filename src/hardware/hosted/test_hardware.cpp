@@ -18,7 +18,7 @@
  */
 // -----------------------------------------------------------------------------
 
-#include "hardware.hpp"
+#include "test_hardware.hpp"
 
 
 TestHardware::TestHardware() : Hardware(can)
