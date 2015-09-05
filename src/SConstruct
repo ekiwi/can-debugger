@@ -37,8 +37,8 @@ env.GitInfoHeader()
 env.BuildInfoHeader()
 
 # always build unittests for hosted
-ignore_paths = [os.path.join('.', 'hardware', p) for p in next(os.walk(hardware_path))[1] if p != 'hosted']
-unittest_files =  env.FindFiles('.', ignore=ignore_paths + ['main.cpp'])
+ut_ignore_paths = [os.path.join('.', 'hardware', p) for p in next(os.walk(hardware_path))[1] if p != 'hosted']
+unittest_files =  env.FindFiles('.', ignore=ut_ignore_paths + ['main.cpp'])
 
 # declare a file which later runs all the tests
 template = ARGUMENTS.get('template', env['XPCC_CONFIG']['build']['template'])
@@ -47,7 +47,9 @@ runner = env.UnittestRunner(target = env.Buildpath('runner.cpp'),
 							template = template)
 
 sources = unittest_files.sources + [runner]
-unittest = env.Program(target=env['XPCC_CONFIG']['general']['name'], source=sources)
+unittest = env.Program(
+	target=env['XPCC_CONFIG']['general']['name'] + ".unittest",
+	source=sources)
 
 env.Alias('build_unittest', unittest)
 env.Alias('unittest', env.Run(unittest))
