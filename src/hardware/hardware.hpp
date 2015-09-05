@@ -39,7 +39,7 @@ public:
 	Hardware(AbstractCan& can) : can(can), changeModeReceiver(nullptr) {}
 
 	virtual void
-	initialize();
+	initialize() = 0;
 
 	/// @defgroup version Version and Hardware Information
 	/// @{

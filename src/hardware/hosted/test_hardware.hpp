@@ -22,6 +22,8 @@
 #define CAN_DEBUGGER_TEST_RIG_HARDWARE
 
 #include "../../hardware/hardware.hpp"
+#include "can.hpp"
+#include "dummy_iodevice.hpp"
 
 /**
  * This class emulates a hardware interface for running unittests.
@@ -71,6 +73,9 @@ public:
 	bool rxLedState;
 	bool txLedState;
 	uint8_t currentMode;
+	TestCan can;
+	DummyIODevice<> debugDevice;
+	DummyIODevice<> hostDevice;
 
 private:
 	static constexpr const char * Description = "Unittest Hardware";

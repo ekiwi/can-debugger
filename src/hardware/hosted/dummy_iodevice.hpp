@@ -17,25 +17,51 @@
  * this program; if not, see <http://www.gnu.org/licenses/>.
  */
 // -----------------------------------------------------------------------------
-#include "hardware.hpp"
 
 
-void
-Hardware::registerChangeModeReceiver(ChangeModeReceiver* receiver)
+#ifndef DUMMY_IODEVICE_HPP
+#define DUMMY_IODEVICE_HPP
+
+#include <xpcc/io/iodevice.hpp>
+#include <xpcc/container/queue.hpp>
+
+template<size_t InputBufferSize = 200, size_t OutputBufferSize = 200>
+class DummyIODevice : public xpcc::IODevice
 {
-	if(receiver != nullptr) {
-		this->changeModeReceiver = receiver;
+public:
+	xpcc::BoundedQueue<uint8_t, InputBufferSize> input;
+	xpcc::BoundedQueue<uint8_t, OutputBufferSize> output;
+
+	virtual void
+	write(char c) {
+		output.push(static_cast<uint8_t>(c));
 	}
-}
 
-bool
-Hardware::changeMode(const uint8_t mode)
-{
-	if(this->changeModeReceiver != nullptr) {
-		if(this->changeModeReceiver->changeMode(mode)) {
-			this->indicateMode(mode);
+	virtual void
+	write(const char *s) {
+		while (*s)
+		{
+			output.push(static_cast<uint8_t>(*s));
+			s++;
+		}
+	}
+
+	virtual void
+	flush() {
+		while(!input.isEmpty())  input.pop();
+		while(!output.isEmpty()) output.pop();
+	}
+
+	virtual bool
+	read(char& c) {
+		if(input.isEmpty()) {
+			return false;
+		} else {
+			c = static_cast<char>(input.get());
+			input.pop();
 			return true;
 		}
 	}
-	return false;
-}
+};
+
+#endif	// DUMMY_IODEVICE_HPP
