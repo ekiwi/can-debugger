@@ -6,8 +6,11 @@ before_install:
  - sudo apt-get install -y scons python-jinja2 python3
  - sudo apt-get install -y software-properties-common
  - sudo add-apt-repository -y ppa:terry.guo/gcc-arm-embedded
+ - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
  - sudo apt-get update -q
- - sudo apt-get install -y gcc-arm-none-eabi
+ - sudo apt-get install -y gcc-arm-none-eabi g++-5
+ - export CC=gcc-5
+ - export CXX=g++-5
 
 env:
  - TEST_SUITE="unittest"
