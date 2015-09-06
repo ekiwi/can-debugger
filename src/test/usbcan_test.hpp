@@ -28,4 +28,5 @@ public:
 	void testBaudrate();
 	void testUnsupportedAndInvalidCommands();
 	void testReadCommands();
+	void testErrorCount();
 };

@@ -131,6 +131,11 @@ UsbcanTest::testReceiveCanMsg()
 	reset();
 	char temp[100];
 
+	// open channel
+	host << "S4\rO\r"; usbCan.run();
+	TEST_ACK();
+	TEST_ACK();
+
 	// receive extended can message
 	xpcc::can::Message msg(0xf450, 5);
 	msg.flags.extended = true;
@@ -142,7 +147,7 @@ UsbcanTest::testReceiveCanMsg()
 	hardware.can.debugInFifo.push(msg);
 	usbCan.run();
 	host.get(temp);
-	TEST_ASSERT_EQUALS_STRING(temp, "T0000f4504caffe01337\r");
+	TEST_ASSERT_EQUALS_STRING(temp, "T0000F4505CAFFE01337\r");
 
 	// receive standard can message
 	xpcc::can::Message msg2(0x00ff, 3);
@@ -153,7 +158,7 @@ UsbcanTest::testReceiveCanMsg()
 	hardware.can.debugInFifo.push(msg2);
 	usbCan.run();
 	host.get(temp);
-	TEST_ASSERT_EQUALS_STRING(temp, "r00ff30effca\r");
+	TEST_ASSERT_EQUALS_STRING(temp, "t0FF30EFFCA\r");
 
 }
 
@@ -208,7 +213,29 @@ UsbcanTest::testReadCommands()
 	TEST_ASSERT_EQUALS_STRING(temp, "N0000\r");
 
 	// ReadHardwareAndFirmwareVersion
-	host << "V\r";  usbCan.run();
+	host << "V\r"; usbCan.run();
 	host.get(temp);
 	TEST_ASSERT_EQUALS_STRING(temp, "V1000\r");
+}
+
+void
+UsbcanTest::testErrorCount()
+{
+	reset();
+	char temp[100];
+
+	hardware.can.txErrorCount = 0x5f;
+	usbCan.run();
+	host.get(temp);
+	TEST_ASSERT_EQUALS_STRING(temp, "E005F\r");
+
+	hardware.can.rxErrorCount = 0x30;
+	usbCan.run();
+	host.get(temp);
+	TEST_ASSERT_EQUALS_STRING(temp, "E305F\r");
+
+	hardware.can.txErrorCount = 0;
+	usbCan.run();
+	host.get(temp);
+	TEST_ASSERT_EQUALS_STRING(temp, "E3000\r");
 }
