@@ -41,7 +41,7 @@ ut_ignore_paths = [os.path.join('.', 'hardware', p) for p in next(os.walk(hardwa
 unittest_files =  env.FindFiles('.', ignore=ut_ignore_paths + ['main.cpp'])
 
 # declare a file which later runs all the tests
-template = ARGUMENTS.get('template', env['XPCC_CONFIG']['build']['template'])
+template = '../xpcc/templates/unittest/runner_hosted.cpp.in'
 runner = env.UnittestRunner(target = env.Buildpath('runner.cpp'),
 							source = unittest_files.header,
 							template = template)
