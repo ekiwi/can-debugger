@@ -102,6 +102,8 @@ UsbcanTest::testSendCanMsg()
 
 	// open channel
 	host << "S4\rO\r"; usbCan.run();
+	TEST_ACK();
+	TEST_ACK();
 
 	// transmit empty standard CAN frame
 	host << "t0f40\r"; usbCan.run();
@@ -111,6 +113,16 @@ UsbcanTest::testSendCanMsg()
 	hardware.can.debugOutFifo.pop();
 	TEST_ASSERT_EQUALS(msg.getIdentifier(), 0xf4u);
 	TEST_ASSERT_EQUALS(msg.getLength(), 0);
+
+	// send invalid send commands
+	host << "tfff0\r"; usbCan.run();	// id too high only 11 bits supported
+	TEST_NACK();
+	host << "t0ff300ff4\r"; usbCan.run();	// one octet missing
+	TEST_NACK();
+	host << "t0ff30RMf4.\r"; usbCan.run();	// invalid character in payload
+	TEST_NACK();
+	host << "t0f.3000000\r"; usbCan.run();	// invalid character in id
+	TEST_NACK();
 
 }
 
