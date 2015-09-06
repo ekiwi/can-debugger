@@ -29,8 +29,13 @@ template<size_t InputBufferSize = 200, size_t OutputBufferSize = 200>
 class DummyIODevice : public xpcc::IODevice
 {
 public:
-	xpcc::BoundedQueue<uint8_t, InputBufferSize> input;
-	xpcc::BoundedQueue<uint8_t, OutputBufferSize> output;
+	using InputFifo  = xpcc::BoundedQueue<uint8_t, InputBufferSize>;
+	using OutputFifo = xpcc::BoundedQueue<uint8_t, OutputBufferSize>;
+
+	InputFifo& input;
+	OutputFifo& output;
+
+	DummyIODevice(InputFifo& input, OutputFifo& output) : input(input), output(output) {}
 
 	virtual void
 	write(char c) {
@@ -62,6 +67,21 @@ public:
 			return true;
 		}
 	}
+};
+
+template<size_t BufferSize = 200>
+class BidirectionalDummyIODevice : public DummyIODevice<BufferSize, BufferSize>
+{
+public:
+	using Underlying = DummyIODevice<BufferSize, BufferSize>;
+	typename Underlying::InputFifo input;
+	typename Underlying::OutputFifo output;
+
+public:
+	BidirectionalDummyIODevice() : Underlying(input, output), other(output, input) {}
+
+public:
+	Underlying other;
 };
 
 #endif	// DUMMY_IODEVICE_HPP

@@ -74,8 +74,8 @@ public:
 	bool txLedState;
 	uint8_t currentMode;
 	TestCan can;
-	DummyIODevice<> debugDevice;
-	DummyIODevice<> hostDevice;
+	BidirectionalDummyIODevice<> debugDevice;
+	BidirectionalDummyIODevice<> hostDevice;
 
 private:
 	static constexpr const char * Description = "Unittest Hardware";
