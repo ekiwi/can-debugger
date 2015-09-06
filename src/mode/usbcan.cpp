@@ -29,9 +29,6 @@ UsbCan::enable()
 	isChannelOpen = false;
 	isBitrateSet  = false;
 	rxBuffer.reset();
-
-	lastRxErrorCount = hardware.getCanReceiveErrorCounter();
-	lastTxErrorCount = hardware.getCanTransmitErrorCounter();
 }
 
 void
@@ -70,15 +67,17 @@ UsbCan::run()
 	}
 
 	// 3.) check if there was a can error
-	uint8_t new_rx = hardware.getCanReceiveErrorCounter();
-	uint8_t new_tx = hardware.getCanTransmitErrorCounter();
+	if(isChannelOpen) {
+		uint8_t new_rx = hardware.getCanReceiveErrorCounter();
+		uint8_t new_tx = hardware.getCanTransmitErrorCounter();
 
-	if(lastRxErrorCount != new_rx || lastTxErrorCount != new_tx) {
-		host << 'E' << xpcc::hex << new_rx << new_tx << xpcc::ascii << '\r';
+		if(lastRxErrorCount != new_rx || lastTxErrorCount != new_tx) {
+			host << 'E' << xpcc::hex << new_rx << new_tx << xpcc::ascii << '\r';
+		}
+
+		lastRxErrorCount = new_rx;
+		lastTxErrorCount = new_tx;
 	}
-
-	lastRxErrorCount = new_rx;
-	lastTxErrorCount = new_tx;
 }
 
 enum class
@@ -203,6 +202,8 @@ UsbCan::decodeCommand()
 				this->mode = xpcc::Can::Mode::ListenOnly;
 			}
 			hardware.initializeCan(this->mode, this->bitrate);
+			lastRxErrorCount = hardware.getCanReceiveErrorCounter();
+			lastTxErrorCount = hardware.getCanTransmitErrorCounter();
 			// TODO: initialize filters
 			isChannelOpen = true;
 		}
