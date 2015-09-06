@@ -27,6 +27,8 @@ TestCan::initialize(const xpcc::Can::Mode mode, const uint32_t bitrate)
 	this->busState = xpcc::Can::BusState::Connected;
 	this->mode = mode;
 	this->bitrate = bitrate;
+	while(!this->debugInFifo.isEmpty())  this->debugInFifo.pop();
+	while(!this->debugOutFifo.isEmpty()) this->debugOutFifo.pop();
 }
 
 bool
