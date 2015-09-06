@@ -47,6 +47,10 @@ UsbcanTest::testOpenCloseChannel()
 {
 	reset();
 
+	// try to open channel without bitrate set
+	host << "O\r"; usbCan.run();
+	TEST_NACK();
+
 	// try to set bitrate to 125 kbps and then open regular channel
 	host << "S4\rO\r"; usbCan.run();
 	// check for acknoledgements
@@ -85,6 +89,29 @@ UsbcanTest::testOpenCloseChannel()
 	TEST_ASSERT_TRUE(hardware.can.mode     == xpcc::Can::Mode::ListenOnly);
 	TEST_ASSERT_TRUE(hardware.can.bitrate  == xpcc::Can::Bitrate::MBps1);
 	TEST_ASSERT_TRUE(hardware.can.busState == xpcc::Can::BusState::Connected);
+}
+
+void
+UsbcanTest::testSendCanMsg()
+{
+	reset();
+
+	// transmit empty standard CAN frame (this should fail as the channel is closed)
+	host << "t0f40\r"; usbCan.run();
+	TEST_NACK();
+
+	// open channel
+	host << "S4\rO\r"; usbCan.run();
+
+	// transmit empty standard CAN frame
+	host << "t0f40\r"; usbCan.run();
+	TEST_ACK();
+	TEST_ASSERT_TRUE(!hardware.can.debugOutFifo.isEmpty());
+	xpcc::can::Message msg = hardware.can.debugOutFifo.get();
+	hardware.can.debugOutFifo.pop();
+	TEST_ASSERT_EQUALS(msg.getIdentifier(), 0xf4u);
+	TEST_ASSERT_EQUALS(msg.getLength(), 0);
+
 }
 
 void
