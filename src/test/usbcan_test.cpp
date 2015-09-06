@@ -237,6 +237,16 @@ UsbcanTest::testErrorCount()
 	reset();
 	char temp[100];
 
+	// errors counts should not be sent while channel is closed
+	hardware.can.txErrorCount = 0x50;
+	usbCan.run();
+	TEST_EMPTY();
+
+	// open channel
+	host << "S4\rO\r"; usbCan.run();
+	TEST_ACK();
+	TEST_ACK();
+
 	hardware.can.txErrorCount = 0x5f;
 	usbCan.run();
 	host.get(temp);
