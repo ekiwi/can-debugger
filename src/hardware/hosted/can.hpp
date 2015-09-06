@@ -55,6 +55,8 @@ public:
 	}
 
 public:
+	TestCan() { this->reset(); }
+
 	void
 	initialize(const xpcc::Can::Mode mode, const uint32_t bitrate) override;
 
