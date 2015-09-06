@@ -32,6 +32,7 @@
 TEST_ASSERT_EQUALS(static_cast<uint32_t>(x), static_cast<uint32_t>(y))
 #define TEST_ACK()  { char cc; host.get(cc); TEST_ASSERT_CHAR_EQUALS(cc, '\r'); }
 #define TEST_NACK() { char cc; host.get(cc); TEST_ASSERT_CHAR_EQUALS(cc, '\x07'); }
+#define TEST_EMPTY() { char cc; host.get(cc); TEST_ASSERT_CHAR_EQUALS(cc, xpcc::IOStream::eof); }
 
 TestHardware hardware;
 UsbCan usbCan(hardware);
@@ -131,19 +132,31 @@ UsbcanTest::testReceiveCanMsg()
 	reset();
 	char temp[100];
 
+	// extended can message
+	xpcc::can::Message msg(0xf450, 5);
+	msg.flags.extended = true;
+	msg.data[0] = 0xca;
+	msg.data[1] = 0xff;
+	msg.data[2] = 0xe0;
+	msg.data[3] = 0x00;
+	msg.data[4] = 0x00;
+
+	// try to send message before channel is open
+	// this should be ignored
+	hardware.can.debugInFifo.push(msg);
+	usbCan.run();
+	TEST_EMPTY();
+	// msg should be discarded when channel is opened
+	// change data to make sure
+	msg.data[3] = 0x13;
+	msg.data[4] = 0x37;
+
 	// open channel
 	host << "S4\rO\r"; usbCan.run();
 	TEST_ACK();
 	TEST_ACK();
 
 	// receive extended can message
-	xpcc::can::Message msg(0xf450, 5);
-	msg.flags.extended = true;
-	msg.data[0] = 0xca;
-	msg.data[1] = 0xff;
-	msg.data[2] = 0xe0;
-	msg.data[3] = 0x13;
-	msg.data[4] = 0x37;
 	hardware.can.debugInFifo.push(msg);
 	usbCan.run();
 	host.get(temp);
