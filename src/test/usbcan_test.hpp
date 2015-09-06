@@ -23,5 +23,5 @@ class UsbcanTest : public unittest::TestSuite
 {
 public:
 	void testOpenCloseChannel();
-
+	void testBaudrate();
 };

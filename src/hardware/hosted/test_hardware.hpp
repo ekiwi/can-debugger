@@ -37,6 +37,10 @@ public:
 	void
 	initialize() override;
 
+	/// reset the test hardware
+	void
+	reset();
+
 	const char*
 	getDescription() override
 	{ return Description; }

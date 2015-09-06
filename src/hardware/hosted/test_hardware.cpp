@@ -28,3 +28,14 @@ void
 TestHardware::initialize()
 {
 }
+
+void
+TestHardware::reset()
+{
+	rxLedState = false;
+	txLedState = false;
+	currentMode = 0;
+	can.reset();
+	debugDevice.flush();
+	hostDevice.flush();
+}

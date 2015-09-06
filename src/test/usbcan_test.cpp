@@ -26,14 +26,15 @@ TEST_ASSERT_EQUALS(static_cast<uint32_t>(x), static_cast<uint32_t>(y))
 #define TEST_ACK()  { char cc; host.get(cc); TEST_ASSERT_CHAR_EQUALS(cc, '\r'); }
 #define TEST_NACK() { char cc; host.get(cc); TEST_ASSERT_CHAR_EQUALS(cc, '\x07'); }
 
+TestHardware hardware;
+UsbCan usbCan(hardware);
+xpcc::IOStream host(hardware.hostDevice.other);
+
+
 void
 UsbcanTest::testOpenCloseChannel()
 {
-	TestHardware hardware;
-	hardware.initialize();
-	UsbCan usbCan(hardware);
-	usbCan.enable();
-	xpcc::IOStream host(hardware.hostDevice.other);
+	hardware.reset();
 
 	// try to set bitrate to 125 kbps and then regular open channel
 	host << "S4\rO\r"; usbCan.run();
@@ -56,13 +57,15 @@ UsbcanTest::testOpenCloseChannel()
 	// try to close again
 	host << "C\r"; usbCan.run();
 	TEST_NACK();
+}
 
+void
+UsbcanTest::testBaudrate()
+{
 	// set invalid baudrate
 	host << "S7\r"; usbCan.run();	// S7 (800kbps) is not availbale on our can debugger
 	TEST_NACK();
 	host << "S9\rS54\r"; usbCan.run();
 	TEST_NACK();
 	TEST_NACK();
-
-
 }
