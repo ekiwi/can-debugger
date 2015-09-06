@@ -123,6 +123,37 @@ UsbcanTest::testSendCanMsg()
 	TEST_NACK();
 	host << "t0f.3000000\r"; usbCan.run();	// invalid character in id
 	TEST_NACK();
+}
+
+void
+UsbcanTest::testReceiveCanMsg()
+{
+	reset();
+	char temp[100];
+
+	// receive extended can message
+	xpcc::can::Message msg(0xf450, 5);
+	msg.flags.extended = true;
+	msg.data[0] = 0xca;
+	msg.data[1] = 0xff;
+	msg.data[2] = 0xe0;
+	msg.data[3] = 0x13;
+	msg.data[4] = 0x37;
+	hardware.can.debugInFifo.push(msg);
+	usbCan.run();
+	host.get(temp);
+	TEST_ASSERT_EQUALS_STRING(temp, "T0000f4504caffe01337\r");
+
+	// receive standard can message
+	xpcc::can::Message msg2(0x00ff, 3);
+	msg2.flags.extended = false;
+	msg2.data[0] = 0x0e;
+	msg2.data[1] = 0xff;
+	msg2.data[2] = 0xca;
+	hardware.can.debugInFifo.push(msg2);
+	usbCan.run();
+	host.get(temp);
+	TEST_ASSERT_EQUALS_STRING(temp, "r00ff30effca\r");
 
 }
 

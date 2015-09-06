@@ -24,6 +24,7 @@ class UsbcanTest : public unittest::TestSuite
 public:
 	void testOpenCloseChannel();
 	void testSendCanMsg();
+	void testReceiveCanMsg();
 	void testBaudrate();
 	void testUnsupportedAndInvalidCommands();
 	void testReadCommands();
