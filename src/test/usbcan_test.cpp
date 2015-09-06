@@ -53,4 +53,16 @@ UsbcanTest::testOpenCloseChannel()
 	//        interface to turn off the can module
 	//TEST_ASSERT_TRUE(hardware.can.busState == xpcc::Can::BusState::Off);
 
+	// try to close again
+	host << "C\r"; usbCan.run();
+	TEST_NACK();
+
+	// set invalid baudrate
+	host << "S7\r"; usbCan.run();	// S7 (800kbps) is not availbale on our can debugger
+	TEST_NACK();
+	host << "S9\rS54\r"; usbCan.run();
+	TEST_NACK();
+	TEST_NACK();
+
+
 }
