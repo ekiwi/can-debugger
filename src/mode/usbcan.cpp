@@ -216,11 +216,13 @@ UsbCan::decodeCommand()
 		}
 		break;
 	case Command::ReadStatusFlag:
-		host << xpcc::hex << 0 << xpcc::ascii;
+		host << xpcc::hex << static_cast<uint8_t>(0) << xpcc::ascii;
 		// TODO But what?
 		break;
 	case Command::ReadSerialNumber:
-		host << 'N' << xpcc::hex << 0 << 0 << xpcc::ascii;
+		host << 'N' << xpcc::hex
+			<< static_cast<uint8_t>(0)
+			<< static_cast<uint8_t>(0) << xpcc::ascii;
 		break;
 	case Command::ReadHardwareAndFirmwareVersion:
 		{
