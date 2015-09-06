@@ -17,9 +17,16 @@
  * this program; if not, see <http://www.gnu.org/licenses/>.
  */
 // -----------------------------------------------------------------------------
+
 #include "usbcan_test.hpp"
 #include "../hardware/hosted/test_hardware.hpp"
 #include "../mode/usbcan.hpp"
+
+#include <xpcc/debug/logger.hpp>
+
+// Set the log level
+#undef	XPCC_LOG_LEVEL
+#define	XPCC_LOG_LEVEL xpcc::log::DEBUG
 
 #define TEST_ASSERT_CHAR_EQUALS(x,y) \
 TEST_ASSERT_EQUALS(static_cast<uint32_t>(x), static_cast<uint32_t>(y))
@@ -30,13 +37,17 @@ TestHardware hardware;
 UsbCan usbCan(hardware);
 xpcc::IOStream host(hardware.hostDevice.other);
 
+static inline void reset() {
+	hardware.reset();
+	usbCan.enable();
+}
 
 void
 UsbcanTest::testOpenCloseChannel()
 {
-	hardware.reset();
+	reset();
 
-	// try to set bitrate to 125 kbps and then regular open channel
+	// try to set bitrate to 125 kbps and then open regular channel
 	host << "S4\rO\r"; usbCan.run();
 	// check for acknoledgements
 	TEST_ACK();
@@ -46,6 +57,11 @@ UsbcanTest::testOpenCloseChannel()
 	TEST_ASSERT_TRUE(hardware.can.mode     == xpcc::Can::Mode::Normal);
 	TEST_ASSERT_TRUE(hardware.can.bitrate  == xpcc::Can::Bitrate::kBps125);
 	TEST_ASSERT_TRUE(hardware.can.busState == xpcc::Can::BusState::Connected);
+
+	// try double close
+	host << "S4\rO\r"; usbCan.run();
+	TEST_NACK();
+	TEST_NACK();
 
 	// try to close channel
 	host << "C\r"; usbCan.run();
@@ -57,15 +73,72 @@ UsbcanTest::testOpenCloseChannel()
 	// try to close again
 	host << "C\r"; usbCan.run();
 	TEST_NACK();
+
+	// try to set bitrate to 1 Mbps and then open listen only channel
+	hardware.can.initializeCalled = false;
+	host << "S8\rL\r"; usbCan.run();
+	// check for acknoledgements
+	TEST_ACK();
+	TEST_ACK();
+	// check if can was initialized
+	TEST_ASSERT_TRUE(hardware.can.initializeCalled);
+	TEST_ASSERT_TRUE(hardware.can.mode     == xpcc::Can::Mode::ListenOnly);
+	TEST_ASSERT_TRUE(hardware.can.bitrate  == xpcc::Can::Bitrate::MBps1);
+	TEST_ASSERT_TRUE(hardware.can.busState == xpcc::Can::BusState::Connected);
 }
 
 void
 UsbcanTest::testBaudrate()
 {
+	reset();
+
 	// set invalid baudrate
 	host << "S7\r"; usbCan.run();	// S7 (800kbps) is not availbale on our can debugger
 	TEST_NACK();
-	host << "S9\rS54\r"; usbCan.run();
+	host << "S\rS9\rS54\r"; usbCan.run();
 	TEST_NACK();
 	TEST_NACK();
+	TEST_NACK();
+}
+
+void
+UsbcanTest::testUnsupportedAndInvalidCommands()
+{
+	reset();
+
+	// some invalid and undefined commands
+	char invalid[] = {
+		// unsupported
+		'M',	// SetAcceptanceCode
+		'm',	// SetAcceptanceMask
+		's',	// SetBtr0Btr1
+		// invalid
+		'A', 'B', '0', 'n', 'x'};
+	for(char cc : invalid) {
+		host << cc << '\r'; usbCan.run();
+		TEST_NACK();
+	}
+}
+
+void
+UsbcanTest::testReadCommands()
+{
+	reset();
+	char temp[100];
+
+	// ReadStatusFlag
+	host << "F\r";  usbCan.run();
+	host.get(temp);
+	// TODO: what is the actual response expected
+	TEST_ASSERT_EQUALS_STRING(temp, "00\r");
+
+	// ReadSerialNumber
+	host << "N\r";  usbCan.run();
+	host.get(temp);
+	TEST_ASSERT_EQUALS_STRING(temp, "N0000\r");
+
+	// ReadHardwareAndFirmwareVersion
+	host << "V\r";  usbCan.run();
+	host.get(temp);
+	TEST_ASSERT_EQUALS_STRING(temp, "V1000\r");
 }
