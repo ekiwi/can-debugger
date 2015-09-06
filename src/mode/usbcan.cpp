@@ -49,7 +49,7 @@ UsbCan::run()
 	if(hardware.getCanMessage(msg) && isChannelOpen) {
 		char str[128];
 		xpcc::CanLawicelFormatter::convertToString(msg, str);
-		host << str;
+		host << str << "\r";
 		// TODO: timestamps, check if format is correct
 	}
 
