@@ -24,18 +24,29 @@
 
 #include <xpcc/processing/protothread.hpp>
 #include "hardware/hardware.hpp"
+#include "mode/mode.hpp"
 
 class
 CanDebugger : public xpcc::pt::Protothread
 {
 public:
-	CanDebugger(Hardware& hardware) : hardware(hardware) {}
+	CanDebugger(Hardware& hardware, std::initializer_list<Mode*> modes)
+			: hardware(hardware), activeMode(nullptr), modes(5) {
+		for(auto mode : modes) {
+			this->modes.append(mode);
+		}
+		if(!this->modes.isEmpty()) {
+			activeMode = this->modes[0];
+		}
+	}
 
 	/// Needs to be called as often as possible.
 	bool
 	run();
 private:
 	Hardware& hardware;
+	Mode* activeMode;
+	xpcc::DynamicArray<Mode*> modes;
 };
 
 #endif // CAN_DEBUGGER_CAN_DEBUGGER

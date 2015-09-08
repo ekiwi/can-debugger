@@ -28,6 +28,12 @@
 bool
 CanDebugger::run()
 {
+	// run active mode
+	if(activeMode != nullptr) {
+		activeMode->run();
+	}
+
+	// thread to change mode/control UI etc.
 	PT_BEGIN();
 	XPCC_LOG_DEBUG << "[can-debugger] running" << xpcc::endl;
 

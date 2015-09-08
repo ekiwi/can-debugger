@@ -36,8 +36,11 @@ xpcc::log::Logger xpcc::log::error(hardware.getDebugIODevice());
 #undef	XPCC_LOG_LEVEL
 #define	XPCC_LOG_LEVEL xpcc::log::INFO
 
+#include "mode/usbcan.hpp"
+UsbCan usbCanMode(hardware);
+
 #include "can_debugger.hpp"
-CanDebugger canDebugger(hardware);
+CanDebugger canDebugger(hardware, { &usbCanMode });
 
 MAIN_FUNCTION
 {
