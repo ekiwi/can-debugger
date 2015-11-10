@@ -45,4 +45,7 @@ Stm32F3Discovery::initialize()
 	GpioOutputA2::connect(HostUart::Tx);
 	GpioInputA3::connect(HostUart::Rx);
 	HostUart::initialize<defaultSystemClock, HostUartBaudrate>(8);
+
+	GpioOutputA12::connect(Can::Tx);
+	GpioInputA11::connect(Can::Rx);
 }
