@@ -46,6 +46,7 @@ UsbCan::run()
 	if(hardware.getCanMessage(msg) && isChannelOpen) {
 		char str[128];
 		xpcc::CanLawicelFormatter::convertToString(msg, str);
+		hardware.indicateRx();
 		host << str << "\r";
 		// TODO: timestamps, check if format is correct
 	}
@@ -178,6 +179,8 @@ UsbCan::decodeCommand()
 			if(xpcc::CanLawicelFormatter::convertToCanMessage(rxBuffer.getRaw(), msg)) {
 				if(!hardware.sendCanMessage(msg)) {
 					error = Error::FailedToSendCanMsg;
+				} else {
+					hardware.indicateTx();
 				}
 			} else {
 				error = Error::InvalidCanMsgString;
